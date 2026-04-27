@@ -50,9 +50,3 @@ check out the original repo of [govd](https://github.com/govdbot/govd).
 ## license
 
 this project is licensed under the [mit license](LICENSE).
-
-<p align="center">
-  <a href="https://t.me/amawolf">
-    <img alt="contact me" title="contact me" src="https://i.imgur.com/6RNhVhr.png">
-  </a>
-</p>
