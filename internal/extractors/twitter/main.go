@@ -115,16 +115,16 @@ func MediaFromAPI(ctx *models.ExtractorContext) (*models.Media, error) {
 			item.AddFormats(formats...)
 		case "photo":
     		photoURL := mediaEntity.MediaURLHTTPS
-    		if !strings.Contains(photoURL, "?") {
-        		photoURL += "?format=jpg&name=orig"
-    		} else {
-        		photoURL += "&name=orig"
-    		}
     		item.AddFormats(&models.MediaFormat{
-        		Type:     database.MediaTypePhoto,
-        		FormatID: "photo",
-        		URL:      []string{photoURL},
-    		})
+     		   Type:     database.MediaTypePhoto,
+    		    FormatID: "photo",
+    		    URL: []string{
+    		        photoURL + "?name=orig",
+    		        photoURL + "?name=large",
+    		        photoURL + "?name=medium",
+     		    	photoURL,
+     		   },
+   			})
 		}
 	}
 
