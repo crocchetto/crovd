@@ -1,26 +1,24 @@
-<h1 align="center">govd</h1>
+<h1 align="center">crovd</h1>
 <p align="center">
-  <a href="https://t.me/govd_bot">
-    <img alt="govd" title="govd" src="https://i.imgur.com/Vx8Psjn.png" width="450">
+  <a href="https://t.me/crovd_bot">
+    <img alt="crovd" title="crovd" src="https://i.imgur.com/KhEBk4X.png" width="450">
   </a>
 </p>
 
 <p align="center">
-  extremely lightweight downloader, inside a telegram bot.
+  personal fork of govd bot
 </p>
 
 <p align="center">
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/govdbot/govd?style=flat-square" alt="license"></a>
-  <a href="https://github.com/govdbot/govd/stargazers"><img src="https://img.shields.io/github/stars/govdbot/govd?style=flat-square" alt="stars"></a>
-  <a href="https://github.com/govdbot/govd/forks"><img src="https://img.shields.io/github/forks/govdbot/govd?style=flat-square" alt="forks"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/crocchetto/crovd?style=flat-square" alt="license"></a>
+  <a href="https://github.com/crocchetto/crovd/stargazers"><img src="https://img.shields.io/github/stars/crocchetto/crovd?style=flat-square" alt="stars"></a>
   <img src="https://img.shields.io/badge/docker-ready-blue?style=flat-square" alt="docker">
-  <a href="https://t.me/govd_bot"><img src="https://img.shields.io/badge/telegram-@govd__bot-2CA5E0?style=flat-square&logo=telegram" alt="telegram"></a>
-  <a href="https://tgbotmau.quoi.dev/?bot=govd_bot" target="_blank"><img alt="@govd_bot MAU" title="@govd_bot MAU" src="https://tgbotmau.quoi.dev/api/bot/govd_bot/mau/badge?style=flat-square"></a>
+  <a href="https://t.me/crovd_bot"><img src="https://img.shields.io/badge/telegram-@crovd__bot-2CA5E0?style=flat-square&logo=telegram" alt="telegram"></a>
 </p>
 
 ## features
 
-* vast number of extractors supported
+* vast number of extractors supported (included xiaohongshu/rednote)
 * extremely lightweight
     * minimal memory usage (~80MB)
     * minimal disk usage (~150MB)
@@ -33,18 +31,28 @@
 
 ## getting started
 
-everything you need to get started with the project can be found in the [wiki](https://github.com/govdbot/govd/wiki).
+everything you need to get started with the project can be found in the [wiki](https://github.com/crocchetto/crovd/wiki).
 
 
 ## migrating from v1
 
 if you are migrating from govd v1 to v2, refer to the [migration tool](https://github.com/govdbot/migrate).
 
+## original repo
+
+check out the original repo of [govd](https://github.com/govdbot/govd).
+
 ## community
 
-- [official bot](https://t.me/govd_bot)
-- [support chat](https://t.me/govdsupport)
+- [crovd bot](https://t.me/crovd_bot)
+- [support for this fork](https://t.me/amawolf)
 
 ## license
 
 this project is licensed under the [mit license](LICENSE).
+
+<p align="center">
+  <a href="https://t.me/amawolf">
+    <img alt="contact me" title="contact me" src="https://i.imgur.com/6RNhVhr.png">
+  </a>
+</p>
