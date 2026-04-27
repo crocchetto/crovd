@@ -18,7 +18,7 @@
 
 ## features
 
-* vast number of extractors supported (included xiaohongshu/rednote)
+* vast number of extractors supported
 * extremely lightweight
     * minimal memory usage (~80MB)
     * minimal disk usage (~150MB)
@@ -28,6 +28,13 @@
 * supports authentication for extractors
 * available in private chats, groups and inline mode
 * translation ready (i18n)
+
+## crovd features
+
+* all previous ones obv
+* xiaohongshu/rednote support
+* supports twitter original quality for photos
+* more to come...
 
 ## getting started
 
@@ -44,7 +51,7 @@ check out the original repo of [govd](https://github.com/govdbot/govd).
 
 ## community
 
-- [crovd bot](https://t.me/crovd_bot)
+- [crovd bot](https://t.me/crovd_bot) (this is whitelisted since I don't have a vps :3)
 - [support for this fork](https://t.me/amawolf)
 
 ## license
