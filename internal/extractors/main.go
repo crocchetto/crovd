@@ -10,6 +10,7 @@ import (
 	"github.com/govdbot/govd/internal/extractors/threads"
 	"github.com/govdbot/govd/internal/extractors/tiktok"
 	"github.com/govdbot/govd/internal/extractors/twitter"
+	"github.com/govdbot/govd/internal/extractors/xiaohongshu"
 	"github.com/govdbot/govd/internal/extractors/youtube"
 	"github.com/govdbot/govd/internal/models"
 )
@@ -33,4 +34,6 @@ var Extractors = []*models.Extractor{
 	reddit.Extractor,
 	reddit.ShortExtractor,
 	threads.Extractor,
+	xiaohongshu.Extractor,
+	xiaohongshu.ShortExtractor,
 }
