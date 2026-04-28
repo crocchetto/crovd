@@ -59,7 +59,7 @@ func extractImagesFromStructuredContent(structuredContent string) ([]string, err
 		return nil, fmt.Errorf("failed to parse structured_content: %w", err)
 	}
 
-	var urls []string
+	urls := make([]string, 0, len(items))
 	for _, item := range items {
 		if item.Insert == nil {
 			continue
@@ -78,7 +78,7 @@ func extractImagesFromStructuredContent(structuredContent string) ([]string, err
 	return urls, nil
 }
 
-func bestVideoResolution(video *VideoDetail) (url string, width, height int32, duration int32) {
+func bestVideoResolution(video *VideoDetail) (string, int32, int32, int32) {
 	if len(video.Resolution) == 0 {
 		return video.URL, 0, 0, 0
 	}
