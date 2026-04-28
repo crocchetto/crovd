@@ -3,7 +3,6 @@ package bluesky
 import (
 	"fmt"
 	"net/http"
-	"regexp"
 	"strings"
 
 	"github.com/bytedance/sonic"
@@ -20,8 +19,6 @@ var (
 		"Accept":          "application/json",
 		"Accept-Language": "en-us,en;q=0.9",
 	}
-
-	handlePattern = regexp.MustCompile(`bsky\.app/profile/([^/]+)/post/([^/?]+)`)
 )
 
 func GetPost(ctx *models.ExtractorContext) (*PostView, error) {
