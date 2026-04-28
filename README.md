@@ -1,7 +1,7 @@
 <h1 align="center">crovd</h1>
 <p align="center">
   <a href="https://t.me/crovd_bot">
-    <img alt="crovd" title="crovd" src="https://i.imgur.com/KhEBk4X.png" width="450">
+    <img alt="crovd" title="crovd" src="https://i.imgur.com/iy0VtWX.png" width="450">
   </a>
 </p>
 
