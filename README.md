@@ -35,6 +35,7 @@
 * supports twitter original quality for photos
 * xiaohongshu/rednote support
 * hoyolab support
+* bluesky support
 * more to come..?
 
 ## getting started

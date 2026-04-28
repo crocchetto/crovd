@@ -1,6 +1,7 @@
 package extractors
 
 import (
+	"github.com/govdbot/govd/internal/extractors/bluesky"
 	"github.com/govdbot/govd/internal/extractors/facebook"
 	"github.com/govdbot/govd/internal/extractors/hoyolab"
 	"github.com/govdbot/govd/internal/extractors/instagram"
@@ -39,4 +40,5 @@ var Extractors = []*models.Extractor{
 	xiaohongshu.ShortExtractor,
 	hoyolab.ShortExtractor,
 	hoyolab.Extractor,
+	bluesky.Extractor,
 }
