@@ -32,9 +32,10 @@
 ## crovd features
 
 * all previous ones obv
-* xiaohongshu/rednote support
 * supports twitter original quality for photos
-* more to come...
+* xiaohongshu/rednote support
+* hoyolab support
+* more to come..?
 
 ## getting started
 
