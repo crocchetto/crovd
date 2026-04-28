@@ -38,7 +38,7 @@ var Extractors = []*models.Extractor{
 	threads.Extractor,
 	xiaohongshu.Extractor,
 	xiaohongshu.ShortExtractor,
-	hoyolab.ShortExtractor,
 	hoyolab.Extractor,
+	hoyolab.ShortExtractor,
 	bluesky.Extractor,
 }
