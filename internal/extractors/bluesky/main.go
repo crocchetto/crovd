@@ -15,8 +15,7 @@ var Extractor = &models.Extractor{
 	DisplayName: "Bluesky",
 
 	URLPattern: regexp.MustCompile(
-	    `https?://(?:fx)?bsky\.app/profile/(?P<handle>[^/]+)/post/(?P<id>[a-zA-Z0-9]+)`,
-
+		`https?://(?:fx)?bsky\.app/profile/(?P<handle>[^/]+)/post/(?P<id>[a-zA-Z0-9]+)`,
 	),
 	Host: []string{"bsky", "fxbsky"},
 

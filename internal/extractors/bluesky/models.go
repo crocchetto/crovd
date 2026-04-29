@@ -25,12 +25,12 @@ type PostRecord struct {
 }
 
 type EmbedView struct {
-	Type         string        `json:"$type"`
-	Images       []*ImageView  `json:"images"`
-	Playlist     string        `json:"playlist"`
-	Thumbnail    string        `json:"thumbnail"`
-	AspectRatio  *AspectRatio  `json:"aspectRatio"`
-	Presentation string        `json:"presentation"`
+	Type         string       `json:"$type"`
+	Images       []*ImageView `json:"images"`
+	Playlist     string       `json:"playlist"`
+	Thumbnail    string       `json:"thumbnail"`
+	AspectRatio  *AspectRatio `json:"aspectRatio"`
+	Presentation string       `json:"presentation"`
 }
 
 type ImageView struct {

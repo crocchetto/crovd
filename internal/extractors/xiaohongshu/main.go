@@ -129,7 +129,7 @@ func extractVideo(ctx *models.ExtractorContext, media *models.Media, note *NoteD
 			}
 			formatID := fmt.Sprintf("hevc-%s-%dx%d", entry.Quality, entry.Width, entry.Height)
 			item.AddFormats(&models.MediaFormat{
-				Type: database.MediaTypeVideo,
+				Type:       database.MediaTypeVideo,
 				FormatID:   formatID,
 				URL:        urls,
 				VideoCodec: database.MediaCodecAvc,
