@@ -99,10 +99,16 @@ func removeImageWatermark(u string) string {
 		u = u[:idx]
 	}
 
-	const marker = "notes_pre_post/"
-	if idx := strings.Index(u, marker); idx != -1 {
-		hash := u[idx+len(marker):]
+	const marker1 = "notes_pre_post/"
+	if idx := strings.Index(u, marker1); idx != -1 {
+		hash := u[idx+len(marker1):]
 		return "https://sns-img-hw.xhscdn.com/notes_pre_post/" + hash + "?imageView2/2/w/0/format/jpg"
+	}
+
+	const marker2 = "spectrum/"
+	if idx := strings.Index(u, marker2); idx != -1 {
+		hash := u[idx+len(marker2):]
+		return "https://sns-img-hw.xhscdn.com/spectrum/" + hash + "?imageView2/2/w/0/format/jpg"
 	}
 
 	parts := strings.Split(u, "/")
