@@ -36,6 +36,7 @@
 * xiaohongshu/rednote support
 * hoyolab support
 * bluesky support
+* GIF/APNG/WEBP are now converted to MP4
 * more to come..?
 
 ## getting started

@@ -148,6 +148,30 @@ func downloadFormat(
 			return nil, fmt.Errorf("failed to download image: %w", err)
 		}
 
+		imgFormat, err := util.DetectImageFormat(file)
+		if err == nil {
+			isAnimated := imgFormat == models.ImageFormatGIF ||
+				(imgFormat == models.ImageFormatPNG && util.IsAnimatedPNG(file)) ||
+				(imgFormat == models.ImageFormatWEBP && util.IsAnimatedWEBP(file))
+
+			if isAnimated {
+				mp4Path := download.ToPath(fileName + ".mp4")
+				convertErr := util.GIFToMP4(file, mp4Path)
+				if convertErr == nil {
+					ctx.FilesTracker.Add(mp4Path)
+					format.Type = database.MediaTypeVideo
+					format.VideoCodec = database.MediaCodecAvc
+					insertVideoInfo(format, mp4Path)
+					return &models.DownloadedFormat{
+						Format:   format,
+						Index:    index,
+						FilePath: mp4Path,
+					}, nil
+				}
+				ctx.Debugf("animated image conversion failed, falling back to jpeg: %v", convertErr)
+			}
+		}
+
 		filePath = download.ToPath(fileName)
 		ctx.FilesTracker.Add(filePath)
 

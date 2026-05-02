@@ -11,6 +11,7 @@ import (
 
 	"github.com/govdbot/govd/internal/logger"
 	"github.com/govdbot/govd/internal/models"
+	ffmpeg "github.com/u2takey/ffmpeg-go"
 	"golang.org/x/image/draw"
 
 	_ "image/gif" // register GIF decoder
@@ -155,4 +156,80 @@ func isHEIF(header []byte) bool {
 	brand := string(header[8:12])
 
 	return slices.Contains(heifBrands, brand)
+}
+
+func GIFToMP4(input io.ReadSeeker, outputPath string) error {
+	tmpFile, err := os.CreateTemp("", "gif-*.gif")
+	if err != nil {
+		return fmt.Errorf("failed to create temp file: %w", err)
+	}
+	defer os.Remove(tmpFile.Name())
+	defer tmpFile.Close()
+
+	if _, err := input.Seek(0, io.SeekStart); err != nil {
+		return fmt.Errorf("failed to seek input: %w", err)
+	}
+	if _, err := io.Copy(tmpFile, input); err != nil {
+		return fmt.Errorf("failed to write temp file: %w", err)
+	}
+	tmpFile.Close()
+
+	err = ffmpeg.Input(tmpFile.Name()).
+		Output(outputPath, ffmpeg.KwArgs{
+			"vf":       "scale=trunc(iw/2)*2:trunc(ih/2)*2",
+			"vcodec":   "libx264",
+			"pix_fmt":  "yuv420p",
+			"movflags": "+faststart",
+		}).
+		OverWriteOutput().
+		Run()
+	if err != nil {
+		return fmt.Errorf("failed to convert gif to mp4: %w", err)
+	}
+	return nil
+}
+
+func IsAnimatedPNG(file io.ReadSeeker) bool {
+	defer file.Seek(0, io.SeekStart)
+	file.Seek(8, io.SeekStart)
+
+	buf := make([]byte, 8)
+	for {
+		if _, err := io.ReadFull(file, buf); err != nil {
+			return false
+		}
+		chunkType := string(buf[4:8])
+		if chunkType == "acTL" {
+			return true
+		}
+		if chunkType == "IDAT" {
+			return false
+		}
+		length := int64(buf[0])<<24 | int64(buf[1])<<16 | int64(buf[2])<<8 | int64(buf[3])
+		file.Seek(length+4, io.SeekCurrent)
+	}
+}
+
+func IsAnimatedWEBP(file io.ReadSeeker) bool {
+	defer file.Seek(0, io.SeekStart)
+	file.Seek(12, io.SeekStart)
+
+	buf := make([]byte, 4)
+	for {
+		if _, err := io.ReadFull(file, buf); err != nil {
+			return false
+		}
+		chunkType := string(buf[:4])
+		if chunkType == "ANIM" {
+			return true
+		}
+		if _, err := io.ReadFull(file, buf); err != nil {
+			return false
+		}
+		size := int64(buf[0]) | int64(buf[1])<<8 | int64(buf[2])<<16 | int64(buf[3])<<24
+		if size%2 != 0 {
+			size++
+		}
+		file.Seek(size, io.SeekCurrent)
+	}
 }
