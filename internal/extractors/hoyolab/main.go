@@ -50,7 +50,7 @@ var Extractor = &models.Extractor{
 	DisplayName: "HoYoLAB",
 
 	URLPattern: regexp.MustCompile(
-		`https?://(?:www\.)?hoyolab\.com/article/(?P<id>\d+)`,
+		`https?://(?:www\.|m\.)?hoyolab\.com/(?:article|#/article)/(?P<id>\d+)`,
 	),
 	Host: []string{"hoyolab"},
 
@@ -117,19 +117,29 @@ func extractVideo(media *models.Media, wrapper *PostWrapper) error {
 }
 
 func extractImages(media *models.Media, wrapper *PostWrapper) error {
+	seen := make(map[string]struct{})
 	var urls []string
 
-	for _, cover := range wrapper.CoverList {
-		if cover.URL != "" {
-			urls = append(urls, cover.URL)
+	add := func(u string) {
+		if u != "" {
+			if _, dup := seen[u]; !dup {
+				seen[u] = struct{}{}
+				urls = append(urls, u)
+			}
 		}
+	}
+
+	for _, cover := range wrapper.CoverList {
+		add(cover.URL)
 	}
 
 	inlineURLs, err := extractImagesFromStructuredContent(wrapper.Post.StructuredContent)
 	if err != nil {
 		return fmt.Errorf("failed to extract images: %w", err)
 	}
-	urls = append(urls, inlineURLs...)
+	for _, u := range inlineURLs {
+		add(u)
+	}
 
 	if len(urls) == 0 {
 		return util.ErrUnavailable
