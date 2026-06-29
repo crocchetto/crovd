@@ -2,13 +2,14 @@ FROM golang:1.26-alpine AS builder
 
 ENV GOCACHE=/root/.cache/go-build
 
+# hadolint ignore=DL3018
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
     --mount=type=cache,target=/var/lib/apk,sharing=locked \
     apk add --no-cache \
         --repository="https://dl-cdn.alpinelinux.org/alpine/edge/main" \
         --repository="https://dl-cdn.alpinelinux.org/alpine/edge/community" \
-        "build-base=0.5-r4" \
-        "libheif-dev=1.21.2-r2"
+        "build-base" \
+        "libheif-dev"
 
 WORKDIR /app
 
@@ -33,13 +34,14 @@ FROM alpine:3.22 AS runtime
 
 WORKDIR /app
 
+# hadolint ignore=DL3018
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
     --mount=type=cache,target=/var/lib/apk,sharing=locked \
     apk add --no-cache \
         --repository="https://dl-cdn.alpinelinux.org/alpine/edge/main" \
         --repository="https://dl-cdn.alpinelinux.org/alpine/edge/community" \
-        "ffmpeg=8.0.1-r3" \
-        "libheif=1.21.2-r2"
+        "ffmpeg" \
+        "libheif"
 
 COPY --from=builder /app/govd ./govd
 

@@ -1,5 +1,6 @@
 FROM golang:1.26-alpine
 
+# hadolint ignore=DL3018
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
     --mount=type=cache,target=/var/lib/apk,sharing=locked \
     apk add --no-cache \
