@@ -1,6 +1,6 @@
 services:
   bot:
-    image: govdbot/govd:main
+    image: crocchetto/crovd:main
     container_name: bot
     restart: unless-stopped
     networks:
