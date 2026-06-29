@@ -172,7 +172,7 @@ other = "cuando está habilitado, el bot no enviará mensajes de error"
 
 [StartMessage]
 hash = "sha1-40428a095863d4dc32706540458f80f76b1b1eef"
-other = "bienvenido {{.Name}} a govd, un bot de telegram de código abierto para descargar contenido de varias plataformas sociales"
+other = "bienvenido {{.Name}} a crovd, un bot de telegram de código abierto para descargar contenido de varias plataformas sociales"
 
 [SupportedExtractorsMessage]
 hash = "sha1-c16d18ef8e24a2d2df3d011dbac5282bbd8783ca"

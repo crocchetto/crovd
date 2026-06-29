@@ -172,7 +172,7 @@ other = "启用后，机器人将不会发送错误消息"
 
 [StartMessage]
 hash = "sha1-40428a095863d4dc32706540458f80f76b1b1eef"
-other = "欢迎 {{.Name}} 使用 govd，这是一个用于从各种社交平台下载内容的开源 Telegram 机器人"
+other = "欢迎 {{.Name}} 使用 crovd，这是一个用于从各种社交平台下载内容的开源 Telegram 机器人"
 
 [SupportedExtractorsMessage]
 hash = "sha1-c16d18ef8e24a2d2df3d011dbac5282bbd8783ca"

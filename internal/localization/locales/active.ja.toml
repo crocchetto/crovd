@@ -172,7 +172,7 @@ other = "有効にすると、ボットはエラーメッセージを送信し�
 
 [StartMessage]
 hash = "sha1-40428a095863d4dc32706540458f80f76b1b1eef"
-other = "ようこそ {{.Name}} さん、govd へ。さまざまなソーシャルプラットフォームからコンテンツをダウンロードするためのオープンソース Telegram ボットです"
+other = "ようこそ {{.Name}} さん、crovd へ。さまざまなソーシャルプラットフォームからコンテンツをダウンロードするためのオープンソース Telegram ボットです"
 
 [SupportedExtractorsMessage]
 hash = "sha1-c16d18ef8e24a2d2df3d011dbac5282bbd8783ca"

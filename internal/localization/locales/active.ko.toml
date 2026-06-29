@@ -172,7 +172,7 @@ other = "활성화하면 봇이 오류 메시지를 보내지 않습니다"
 
 [StartMessage]
 hash = "sha1-40428a095863d4dc32706540458f80f76b1b1eef"
-other = "{{.Name}}님, govd에 오신 것을 환영합니다. 다양한 소셜 플랫폼에서 콘텐츠를 다운로드하기 위한 오픈 소스 텔레그램 봇입니다"
+other = "{{.Name}}님, crovd에 오신 것을 환영합니다. 다양한 소셜 플랫폼에서 콘텐츠를 다운로드하기 위한 오픈 소스 텔레그램 봇입니다"
 
 [SupportedExtractorsMessage]
 hash = "sha1-c16d18ef8e24a2d2df3d011dbac5282bbd8783ca"

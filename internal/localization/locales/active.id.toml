@@ -172,7 +172,7 @@ other = "ketika diaktifkan, bot tidak akan mengirim pesan kesalahan"
 
 [StartMessage]
 hash = "sha1-40428a095863d4dc32706540458f80f76b1b1eef"
-other = "selamat datang {{.Name}} di govd, bot telegram open-source untuk mengunduh konten dari berbagai platform sosial"
+other = "selamat datang {{.Name}} di crovd, bot telegram open-source untuk mengunduh konten dari berbagai platform sosial"
 
 [SupportedExtractorsMessage]
 hash = "sha1-c16d18ef8e24a2d2df3d011dbac5282bbd8783ca"

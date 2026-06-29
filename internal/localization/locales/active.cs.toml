@@ -172,7 +172,7 @@ other = "když je povoleno, bot nebude posílat chybové zprávy"
 
 [StartMessage]
 hash = "sha1-40428a095863d4dc32706540458f80f76b1b1eef"
-other = "vítejte {{.Name}} v govd, open-source telegram botu pro stahování obsahu z různých sociálních platforem"
+other = "vítejte {{.Name}} v crovd, open-source telegram botu pro stahování obsahu z různých sociálních platforem"
 
 [SupportedExtractorsMessage]
 hash = "sha1-c16d18ef8e24a2d2df3d011dbac5282bbd8783ca"

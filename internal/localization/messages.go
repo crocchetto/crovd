@@ -9,7 +9,7 @@ var (
 	}
 	StartMessage = &i18n.Message{
 		ID:    "StartMessage",
-		Other: "welcome {{.Name}} to govd, an open-source telegram bot for downloading content from various social platforms",
+		Other: "welcome {{.Name}} to crovd, an open-source telegram bot for downloading content from various social platforms",
 	}
 	AddButton = &i18n.Message{
 		ID:    "AddButton",
