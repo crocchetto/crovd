@@ -38,7 +38,8 @@
 * bluesky support
 * bilibili support
 * GIF/APNG/WEBP are now converted to MP4
-* more to come..?
+* some other fixes
+* [more to come..?](https://github.com/users/crocchetto/projects/3)
 
 ## getting started
 
