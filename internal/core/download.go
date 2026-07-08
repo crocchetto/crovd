@@ -147,6 +147,7 @@ func downloadFormat(
 		if err != nil {
 			return nil, fmt.Errorf("failed to download image: %w", err)
 		}
+		download.EnsureDownloadDir()
 
 		imgFormat, err := util.DetectImageFormat(file)
 		if err == nil {

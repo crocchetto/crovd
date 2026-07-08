@@ -27,7 +27,7 @@ func DownloadFile(
 		return "", fmt.Errorf("nil extractor context")
 	}
 	settings = ensureDownloadSettings(settings)
-	ensureDownloadDir()
+	EnsureDownloadDir()
 
 	client := ctx.HTTPClient.AsDownloadClient()
 
@@ -92,7 +92,7 @@ func DownloadFileWithSegments(
 		return "", fmt.Errorf("nil extractor context")
 	}
 	settings = ensureDownloadSettings(settings)
-	ensureDownloadDir()
+	EnsureDownloadDir()
 
 	client := ctx.HTTPClient.AsDownloadClient()
 

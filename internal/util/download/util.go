@@ -34,7 +34,7 @@ func ensureDownloadSettings(settings *models.DownloadSettings) *models.DownloadS
 	return settings
 }
 
-func ensureDownloadDir() {
+func EnsureDownloadDir() {
 	dir := config.Env.DownloadsDirectory
 	if dir == "" {
 		return
