@@ -71,6 +71,9 @@ func ParseGQLMedia(ctx *models.ExtractorContext, data *Media) (*models.Media, er
 
 	switch data.Typename {
 	case "GraphVideo", "XDTGraphVideo":
+		if data.VideoURL == "" {
+			return nil, fmt.Errorf("empty video url")
+		}
 		item := media.NewItem()
 		item.AddFormats(&models.MediaFormat{
 			FormatID:     "video",
@@ -83,6 +86,9 @@ func ParseGQLMedia(ctx *models.ExtractorContext, data *Media) (*models.Media, er
 			Height:       data.Dimensions.Height,
 		})
 	case "GraphImage", "XDTGraphImage":
+		if data.DisplayURL == "" {
+			return nil, fmt.Errorf("empty image url")
+		}
 		item := media.NewItem()
 		item.AddFormats(&models.MediaFormat{
 			FormatID: "image",
@@ -94,11 +100,14 @@ func ParseGQLMedia(ctx *models.ExtractorContext, data *Media) (*models.Media, er
 			edges := data.EdgeSidecarToChildren.Edges
 
 			for i := range edges {
-				item := media.NewItem()
 				node := edges[i].Node
 
 				switch node.Typename {
 				case "GraphVideo", "XDTGraphVideo":
+					if node.VideoURL == "" {
+						continue
+					}
+					item := media.NewItem()
 					item.AddFormats(&models.MediaFormat{
 						FormatID:     "video",
 						Type:         database.MediaTypeVideo,
@@ -111,6 +120,10 @@ func ParseGQLMedia(ctx *models.ExtractorContext, data *Media) (*models.Media, er
 					})
 
 				case "GraphImage", "XDTGraphImage":
+					if node.DisplayURL == "" {
+						continue
+					}
+					item := media.NewItem()
 					item.AddFormats(&models.MediaFormat{
 						FormatID: "image",
 						Type:     database.MediaTypePhoto,
@@ -119,6 +132,10 @@ func ParseGQLMedia(ctx *models.ExtractorContext, data *Media) (*models.Media, er
 				}
 			}
 		}
+	}
+
+	if len(media.Items) == 0 {
+		return nil, fmt.Errorf("no media found")
 	}
 
 	return media, nil
