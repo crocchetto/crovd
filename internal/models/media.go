@@ -65,6 +65,7 @@ type MediaFormat struct {
 	InitSegment      string
 	Segments         []string
 	DecryptionKey    *DecryptionKey
+	LocalFilePath    string
 }
 
 type DownloadedFormat struct {

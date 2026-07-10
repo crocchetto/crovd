@@ -9,4 +9,5 @@ type DownloadSettings struct {
 	Cookies        []*http.Cookie
 	DecryptionKey  *DecryptionKey
 	Retries        int
+	AvailableAt    int64
 }

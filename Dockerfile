@@ -41,7 +41,8 @@ RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
         --repository="https://dl-cdn.alpinelinux.org/alpine/edge/main" \
         --repository="https://dl-cdn.alpinelinux.org/alpine/edge/community" \
         "ffmpeg" \
-        "libheif"
+        "libheif" \
+        "yt-dlp"
 
 COPY --from=builder /app/govd ./govd
 

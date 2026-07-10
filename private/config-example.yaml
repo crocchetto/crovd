@@ -1,6 +1,10 @@
 youtube:
-  instance: https://instance.com
-  disabled: true
+  backends:
+    - invidious
+    - yt-dlp
+    - yt-dlp-native
+  instance:
+    - https://invidious.example.com
 
 instagram:
   proxy: http://localhost:8080

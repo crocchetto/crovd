@@ -32,13 +32,11 @@
 ## crovd features
 
 * all previous ones obv
+* youtube extractor now supports yt-dlp ([how to set it up](https://github.com/crocchetto/crovd/wiki/youtube-setup))
 * supports twitter original quality for photos
-* xiaohongshu/rednote support
-* hoyolab support
-* bluesky support
-* bilibili support
-* GIF/APNG/WEBP are now converted to MP4
-* some other fixes
+* support for xiaohongshu/rednote, hoyolab, bluesky, bilibili
+* animated GIF/APNG/WEBP are now converted to MP4
+* some other fixes ([see here](https://github.com/crocchetto/crovd/wiki))
 * [more to come..?](https://github.com/users/crocchetto/projects/3)
 
 ## getting started
@@ -46,7 +44,7 @@
 everything you need to get started with the project can be found in the [wiki](https://github.com/crocchetto/crovd/wiki).
 
 
-## migrating from v1
+## migrating from v1 (not yet tested for crovd)
 
 if you are migrating from govd v1 to v2, refer to the [migration tool](https://github.com/govdbot/migrate).
 

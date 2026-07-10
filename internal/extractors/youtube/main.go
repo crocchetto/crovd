@@ -24,7 +24,7 @@ var Extractor = &models.Extractor{
 	},
 
 	GetFunc: func(ctx *models.ExtractorContext) (*models.ExtractorResponse, error) {
-		video, err := GetVideoFromInv(ctx)
+		video, err := GetVideoFromBackends(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -34,10 +34,39 @@ var Extractor = &models.Extractor{
 	},
 }
 
-func GetVideoFromInv(ctx *models.ExtractorContext) (*models.Media, error) {
+func GetVideoFromBackends(ctx *models.ExtractorContext) (*models.Media, error) {
 	if ctx.Config == nil {
 		return nil, fmt.Errorf("youtube not configured")
 	}
+
+	backends := ctx.Config.Backends
+	if len(backends) == 0 {
+		// keep the default behavior for existing setups
+		backends = []string{backendInvidious}
+	}
+
+	var err error
+	for _, backend := range backends {
+		var media *models.Media
+		switch backend {
+		case backendInvidious:
+			media, err = GetVideoFromInv(ctx)
+		case backendYtDlp:
+			media, err = GetVideoFromYtDlp(ctx)
+		case backendYtDlpNative:
+			media, err = GetVideoFromYtDlpNative(ctx)
+		default:
+			err = fmt.Errorf("unknown backend: %s", backend)
+		}
+		if err == nil {
+			return media, nil
+		}
+		ctx.Debugf("backend %s failed: %v", backend, err)
+	}
+	return nil, err
+}
+
+func GetVideoFromInv(ctx *models.ExtractorContext) (*models.Media, error) {
 	var err error
 	for i := range ctx.Config.Instance {
 		instance, err := GetInvInstance(ctx, i)

@@ -130,6 +130,29 @@ func downloadFormat(
 	index int,
 	format *models.MediaFormat,
 ) (*models.DownloadedFormat, error) {
+	// if the format is already downloaded to disk (e.g. yt-dlp-native
+	// backend), skip the download and use the local file
+	if format.LocalFilePath != "" {
+		filePath := format.LocalFilePath
+		ctx.FilesTracker.Add(filePath)
+
+		thumbnailFilePath, err := getThumbnail(ctx, format, filePath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get thumbnail: %w", err)
+		}
+
+		if format.MissingMetadata() {
+			insertVideoInfo(format, filePath)
+		}
+
+		return &models.DownloadedFormat{
+			Format:            format,
+			Index:             index,
+			FilePath:          filePath,
+			ThumbnailFilePath: thumbnailFilePath,
+		}, nil
+	}
+
 	if len(format.URL) == 0 {
 		return nil, fmt.Errorf("no URL found for selected format")
 	}

@@ -75,3 +75,24 @@ type FormatStream struct {
 	Container    string `json:"container"`
 	Encoding     string `json:"encoding"`
 }
+
+type YtDlpResponse struct {
+	Title    string         `json:"title"`
+	Uploader string         `json:"uploader"`
+	Duration float64        `json:"duration"`
+	Formats  []*YtDlpFormat `json:"formats"`
+}
+
+type YtDlpFormat struct {
+	FormatID    string            `json:"format_id"`
+	URL         string            `json:"url"`
+	Ext         string            `json:"ext"`
+	VideoCodec  string            `json:"vcodec"`
+	AudioCodec  string            `json:"acodec"`
+	Width       int               `json:"width"`
+	Height      int               `json:"height"`
+	Tbr         float64           `json:"tbr"`
+	Protocol    string            `json:"protocol"`
+	AvailableAt int64             `json:"available_at"`
+	HTTPHeaders map[string]string `json:"http_headers"`
+}

@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/govdbot/govd/internal/models"
@@ -16,6 +17,24 @@ import (
 	"github.com/govdbot/govd/internal/util/download/segmented"
 	"github.com/govdbot/govd/internal/util/libav"
 )
+
+func waitUntilAvailable(ctx *models.ExtractorContext, availableAt int64) {
+	if availableAt <= 0 {
+		return
+	}
+	target := time.Unix(availableAt, 0)
+	wait := time.Until(target)
+	if wait <= 0 {
+		return
+	}
+	ctx.Debugf("waiting %s until media is available", wait.Round(time.Millisecond))
+	timer := time.NewTimer(wait)
+	defer timer.Stop()
+	select {
+	case <-ctx.Context.Done():
+	case <-timer.C:
+	}
+}
 
 func DownloadFile(
 	ctx *models.ExtractorContext,
@@ -42,6 +61,7 @@ func DownloadFile(
 
 	var lastErr error
 	for _, url := range urlList {
+		waitUntilAvailable(ctx, settings.AvailableAt)
 		ctx.Debugf("attempting download from: %s", url)
 
 		cd, err := chunked.New(ctx.Context, client, url, settings)

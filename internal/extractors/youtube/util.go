@@ -13,6 +13,12 @@ import (
 
 const invEndpoint = "/api/v1/videos/"
 
+const (
+	backendInvidious   = "invidious"
+	backendYtDlp       = "yt-dlp"
+	backendYtDlpNative = "yt-dlp-native"
+)
+
 func ParseInvFormats(data *InvResponse, instance string) []*models.MediaFormat {
 	formats := make([]*models.MediaFormat, 0, len(data.AdaptiveFormats))
 	duration := data.LengthSeconds

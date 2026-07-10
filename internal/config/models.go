@@ -54,4 +54,5 @@ type ExtractorConfig struct {
 	Impersonate   bool             `yaml:"impersonate"`
 	IsDisabled    bool             `yaml:"disabled"`
 	Instance      []string         `yaml:"instance"`
+	Backends      []string         `yaml:"backends"`
 }
