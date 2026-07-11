@@ -65,23 +65,22 @@ func (c *HTTPClient) AsDownloadClient() *HTTPClient {
 		Headers: c.Headers,
 		Cookies: c.Cookies,
 	})
+	var transport http.RoundTripper = NewTransport()
 	if c.DownloadProxy != "" {
 		proxyURL, err := url.Parse(c.DownloadProxy)
 		if err != nil {
 			logger.L.Warnf("invalid download proxy URL: %v", err)
 			return c
 		}
-		client.Client = &http.Client{
-			Transport: NewTransportWithProxy(proxyURL),
-			Timeout:   defaultTimeout,
-		}
+		transport = NewTransportWithProxy(proxyURL)
 		client.DownloadProxy = c.DownloadProxy
 	} else if c.DisableProxy {
-		client.Client = &http.Client{
-			Transport: NewTransportNoProxyFromEnv(),
-			Timeout:   defaultTimeout,
-		}
+		transport = NewTransportNoProxyFromEnv()
 		client.DisableProxy = true
+	}
+	client.Client = &http.Client{
+		Transport: transport,
+		Timeout:   0,
 	}
 	return client
 }
