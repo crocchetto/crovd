@@ -6,6 +6,7 @@ import (
 	"github.com/govdbot/govd/internal/extractors/facebook"
 	"github.com/govdbot/govd/internal/extractors/hoyolab"
 	"github.com/govdbot/govd/internal/extractors/instagram"
+	"github.com/govdbot/govd/internal/extractors/miyoushe"
 	"github.com/govdbot/govd/internal/extractors/ninegag"
 	"github.com/govdbot/govd/internal/extractors/pinterest"
 	"github.com/govdbot/govd/internal/extractors/reddit"
@@ -45,4 +46,5 @@ var Extractors = []*models.Extractor{
 	bilibili.Extractor,
 	bilibili.ShortExtractor,
 	bilibili.BangumiExtractor,
+	miyoushe.Extractor,
 }
