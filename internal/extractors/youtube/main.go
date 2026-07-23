@@ -64,7 +64,7 @@ func GetVideoFromBackends(ctx *models.ExtractorContext) (*models.Media, error) {
 		if err == nil {
 			err = fmt.Errorf("backend returned no media")
 		}
-		ctx.Debugf("backend %s failed: %v", backend, err)
+		ctx.Warnf("backend %s failed: %v", backend, err)
 	}
 	return nil, err
 }
