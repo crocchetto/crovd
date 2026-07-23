@@ -58,8 +58,11 @@ func GetVideoFromBackends(ctx *models.ExtractorContext) (*models.Media, error) {
 		default:
 			err = fmt.Errorf("unknown backend: %s", backend)
 		}
-		if err == nil {
+		if err == nil && media != nil {
 			return media, nil
+		}
+		if err == nil {
+			err = fmt.Errorf("backend returned no media")
 		}
 		ctx.Debugf("backend %s failed: %v", backend, err)
 	}
@@ -67,19 +70,27 @@ func GetVideoFromBackends(ctx *models.ExtractorContext) (*models.Media, error) {
 }
 
 func GetVideoFromInv(ctx *models.ExtractorContext) (*models.Media, error) {
-	var err error
+	if len(ctx.Config.Instance) == 0 {
+		return nil, fmt.Errorf("no invidious instance configured")
+	}
+	var lastErr error
 	for i := range ctx.Config.Instance {
 		instance, err := GetInvInstance(ctx, i)
 		if err != nil {
+			lastErr = err
 			continue
 		}
 		media, err := GetFromInstance(ctx, instance)
 		if err == nil {
 			return media, nil
 		}
+		lastErr = err
 		ctx.Debugf("invidious instance %s failed: %v", instance, err)
 	}
-	return nil, err
+	if lastErr == nil {
+		lastErr = fmt.Errorf("all invidious instances failed")
+	}
+	return nil, lastErr
 }
 
 func GetFromInstance(ctx *models.ExtractorContext, instance string) (*models.Media, error) {
