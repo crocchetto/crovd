@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - "main"
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,7 +17,41 @@ env:
   GHCR_IMAGE: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.ref_name }}
 
 jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    outputs:
+      build: ${{ steps.decide.outputs.build }}
+      cachebust: ${{ steps.decide.outputs.cachebust }}
+    steps:
+      - name: Decide Whether To Build
+        id: decide
+        run: |
+          case "${{ github.event_name }}" in
+            push)
+              echo "build=true" >> "$GITHUB_OUTPUT"
+              echo "cachebust=static" >> "$GITHUB_OUTPUT"
+              ;;
+            workflow_dispatch)
+              echo "build=true" >> "$GITHUB_OUTPUT"
+              echo "cachebust=manual-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              latest=$(docker run --rm alpine:3.22 sh -c 'apk update -q >/dev/null 2>&1; apk policy yt-dlp 2>/dev/null | grep -oE "^[0-9][^:]*" | head -1' | sed "s/-r[0-9]*$//")
+              current=$(docker run --rm ${{ env.IMAGE }} yt-dlp --version 2>/dev/null || echo "none")
+              echo "alpine edge: '$latest' / published: '$current'"
+              if [ -n "$latest" ] && [ "$latest" != "$current" ]; then
+                echo "build=true" >> "$GITHUB_OUTPUT"
+                echo "cachebust=$latest" >> "$GITHUB_OUTPUT"
+              else
+                echo "build=false" >> "$GITHUB_OUTPUT"
+              fi
+              ;;
+          esac
+
   build-images:
+    needs: [check]
+    if: needs.check.outputs.build == 'true'
     strategy:
       matrix:
         arch: [amd64, arm64]
@@ -55,12 +92,15 @@ jobs:
           platforms: ${{ matrix.platform }}
           push: true
           file: ./Dockerfile
+          build-args: |
+            YTDLP_CACHEBUST=${{ needs.check.outputs.cachebust }}
           tags: |
             ${{ env.IMAGE }}-${{ matrix.arch }}
             ${{ env.GHCR_IMAGE }}-${{ matrix.arch }}
 
   push-manifest:
-    needs: [build-images]
+    needs: [check, build-images]
+    if: needs.check.outputs.build == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Login to Docker Hub

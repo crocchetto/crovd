@@ -41,7 +41,16 @@ RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
         --repository="https://dl-cdn.alpinelinux.org/alpine/edge/main" \
         --repository="https://dl-cdn.alpinelinux.org/alpine/edge/community" \
         "ffmpeg" \
-        "libheif" \
+        "libheif"
+
+ARG YTDLP_CACHEBUST=static
+# hadolint ignore=DL3018
+RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
+    --mount=type=cache,target=/var/lib/apk,sharing=locked \
+    echo "ytdlp cachebust: ${YTDLP_CACHEBUST}" && \
+    apk add --no-cache \
+        --repository="https://dl-cdn.alpinelinux.org/alpine/edge/main" \
+        --repository="https://dl-cdn.alpinelinux.org/alpine/edge/community" \
         "yt-dlp"
 
 COPY --from=builder /app/govd ./govd
