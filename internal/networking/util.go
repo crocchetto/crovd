@@ -2,12 +2,15 @@ package networking
 
 import (
 	"bytes"
+	"compress/flate"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/bytedance/sonic"
 )
@@ -58,7 +61,49 @@ func (client *HTTPClient) FetchWithContext(
 	if err != nil {
 		return nil, err
 	}
+
+	if err := decompressResponse(resp); err != nil {
+		resp.Body.Close()
+		return nil, err
+	}
+
 	return resp, nil
+}
+
+func decompressResponse(resp *http.Response) error {
+	switch strings.ToLower(strings.TrimSpace(resp.Header.Get("Content-Encoding"))) {
+	case "gzip":
+		gz, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return fmt.Errorf("failed to create gzip reader: %w", err)
+		}
+		resp.Body = &wrappedReadCloser{reader: gz, underlying: resp.Body}
+	case "deflate":
+		fl := flate.NewReader(resp.Body)
+		resp.Body = &wrappedReadCloser{reader: fl, underlying: resp.Body}
+	default:
+		return nil
+	}
+	resp.Header.Del("Content-Encoding")
+	resp.ContentLength = -1
+	resp.Uncompressed = true
+	return nil
+}
+
+type wrappedReadCloser struct {
+	reader     io.Reader
+	underlying io.ReadCloser
+}
+
+func (w *wrappedReadCloser) Read(p []byte) (int, error) {
+	return w.reader.Read(p)
+}
+
+func (w *wrappedReadCloser) Close() error {
+	if c, ok := w.reader.(io.Closer); ok {
+		_ = c.Close()
+	}
+	return w.underlying.Close()
 }
 
 func generateChromeUA() string {
