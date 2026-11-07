@@ -38,6 +38,9 @@ const (
 	igramStaticTS = 1793951696745
 
 	embedRetries = 3
+
+	typeGraphVideo = "GraphVideo"
+	typeGraphImage = "GraphImage"
 )
 
 var (
@@ -77,7 +80,7 @@ func ParseGQLMedia(ctx *models.ExtractorContext, data *Media) (*models.Media, er
 	media.SetCaption(caption)
 
 	switch data.Typename {
-	case "GraphVideo", "XDTGraphVideo":
+	case typeGraphVideo, "XDTGraphVideo":
 		if data.VideoURL == "" {
 			return nil, fmt.Errorf("empty video url")
 		}
@@ -92,7 +95,7 @@ func ParseGQLMedia(ctx *models.ExtractorContext, data *Media) (*models.Media, er
 			Width:        data.Dimensions.Width,
 			Height:       data.Dimensions.Height,
 		})
-	case "GraphImage", "XDTGraphImage":
+	case typeGraphImage, "XDTGraphImage":
 		if data.DisplayURL == "" {
 			return nil, fmt.Errorf("empty image url")
 		}
@@ -112,14 +115,14 @@ func ParseGQLMedia(ctx *models.ExtractorContext, data *Media) (*models.Media, er
 				typename := node.Typename
 				if typename == "" {
 					if node.IsVideo || node.VideoURL != "" {
-						typename = "GraphVideo"
+						typename = typeGraphVideo
 					} else {
-						typename = "GraphImage"
+						typename = typeGraphImage
 					}
 				}
 
 				switch typename {
-				case "GraphVideo", "XDTGraphVideo":
+				case typeGraphVideo, "XDTGraphVideo":
 					if node.VideoURL == "" {
 						continue
 					}
@@ -135,7 +138,7 @@ func ParseGQLMedia(ctx *models.ExtractorContext, data *Media) (*models.Media, er
 						Height:       node.Dimensions.Height,
 					})
 
-				case "GraphImage", "XDTGraphImage":
+				case typeGraphImage, "XDTGraphImage":
 					if node.DisplayURL == "" {
 						continue
 					}
