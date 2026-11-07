@@ -29,6 +29,11 @@ type V1Caption struct {
 	Text string `json:"text"`
 }
 
+type PolarisMedia struct {
+	Typename            string  `json:"__typename"`
+	IfNotGatedLoggedOut *V1Item `json:"if_not_gated_logged_out"`
+}
+
 type ContextJSON struct {
 	Context *Context `json:"context"`
 	GqlData *GqlData `json:"gql_data"`

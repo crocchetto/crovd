@@ -1,10 +1,12 @@
 package instagram
 
 import (
+	"bytes"
 	"crypto/hmac"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
@@ -21,6 +23,7 @@ import (
 	"github.com/govdbot/govd/internal/networking"
 	"github.com/govdbot/govd/internal/util"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/bytedance/sonic"
 	"github.com/titanous/json5"
 )
@@ -31,13 +34,17 @@ const (
 
 	igramHostname = "api-wh.igram.world"
 	igramAPIBase  = "api.igram.world"
-	igramHMACKey  = "2fad1ac85b949ee9cfa1d828a34f0ef6df9fe343cf5a953bbcb32061aeb55fd3"
-	igramStaticTS = 1788823048233
+	igramHMACKey  = "7e2e09c12948cd1cd2ac0c9e5a28ad154e841accc0ab649fc484d1fa46adbebd"
+	igramStaticTS = 1793951696745
+
+	embedRetries = 3
 )
 
 var (
 	embedPattern = regexp.MustCompile(
 		`new ServerJS\(\)\);s\.handle\(({.*})\);requireLazy`)
+	jsonScriptPattern = regexp.MustCompile(
+		`(?s)<script type="application/json"[^>]*>(.*?)</script>`)
 
 	webHeaders = map[string]string{
 		"Accept":                    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
@@ -102,7 +109,16 @@ func ParseGQLMedia(ctx *models.ExtractorContext, data *Media) (*models.Media, er
 			for i := range edges {
 				node := edges[i].Node
 
-				switch node.Typename {
+				typename := node.Typename
+				if typename == "" {
+					if node.IsVideo || node.VideoURL != "" {
+						typename = "GraphVideo"
+					} else {
+						typename = "GraphImage"
+					}
+				}
+
+				switch typename {
 				case "GraphVideo", "XDTGraphVideo":
 					if node.VideoURL == "" {
 						continue
@@ -154,7 +170,7 @@ func ParseEmbedGQL(body []byte) (*Media, error) {
 	}
 	igCtx := util.TraverseJSON(data, "contextJSON")
 	if igCtx == nil {
-		return nil, fmt.Errorf("contextJSON not found")
+		return nil, errEmbedNoContext
 	}
 	var ctxJSON ContextJSON
 	switch v := igCtx.(type) {
@@ -172,6 +188,157 @@ func ParseEmbedGQL(body []byte) (*Media, error) {
 		return nil, fmt.Errorf("shortcode_media not found")
 	}
 	return ctxJSON.GqlData.ShortcodeMedia, nil
+}
+
+var errEmbedNoContext = errors.New("contextJSON not found")
+
+// ty InstaFix
+func ParseEmbedHTML(ctx *models.ExtractorContext, body []byte) (*models.Media, error) {
+	if bytes.Contains(body, []byte("WatchOnInstagram")) {
+		return nil, fmt.Errorf("video blocked in embed page")
+	}
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(body))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse embed html: %w", err)
+	}
+
+	format := &models.MediaFormat{
+		FormatID: "image",
+		Type:     database.MediaTypePhoto,
+	}
+	embedMedia := doc.Find(".EmbeddedMediaImage").First()
+	if embedMedia.Length() == 0 {
+		embedMedia = doc.Find(".EmbeddedMediaVideo").First()
+		format.FormatID = "video"
+		format.Type = database.MediaTypeVideo
+		format.VideoCodec = database.MediaCodecAvc
+		format.AudioCodec = database.MediaCodecAac
+	}
+	mediaURL := bestFromSrcset(embedMedia.AttrOr("srcset", ""))
+	if mediaURL == "" {
+		mediaURL = embedMedia.AttrOr("src", "")
+	}
+	if mediaURL == "" {
+		return nil, fmt.Errorf("embedded media not found")
+	}
+	format.URL = []string{mediaURL}
+
+	caption := doc.Find(".Caption").First()
+	caption.Find(".CaptionUsername, .CaptionComments").Remove()
+	caption.Find("br").ReplaceWithHtml("\n")
+
+	media := ctx.NewMedia()
+	media.SetCaption(strings.TrimSpace(caption.Text()))
+	media.NewItem().AddFormats(format)
+	return media, nil
+}
+
+func MediaIDToShortcode(mediaID string) (string, error) {
+	const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+	id, err := strconv.ParseUint(mediaID, 10, 64)
+	if err != nil || id == 0 {
+		return "", fmt.Errorf("invalid media id: %s", mediaID)
+	}
+	var shortcode []byte
+	for id > 0 {
+		shortcode = append([]byte{alphabet[id%64]}, shortcode...)
+		id /= 64
+	}
+	return string(shortcode), nil
+}
+
+func bestFromSrcset(srcset string) string {
+	var bestURL string
+	var bestWidth int
+	for part := range strings.SplitSeq(srcset, ",") {
+		fields := strings.Fields(part)
+		if len(fields) != 2 {
+			continue
+		}
+		width, err := strconv.Atoi(strings.TrimSuffix(fields[1], "w"))
+		if err != nil {
+			continue
+		}
+		if width > bestWidth {
+			bestWidth = width
+			bestURL = fields[0]
+		}
+	}
+	return bestURL
+}
+
+func ParsePostPage(body []byte) (*PolarisMedia, error) {
+	for _, match := range jsonScriptPattern.FindAllSubmatch(body, -1) {
+		if !bytes.Contains(match[1], []byte("xig_polaris_media")) {
+			continue
+		}
+		var data any
+		if err := sonic.ConfigFastest.Unmarshal(match[1], &data); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal post page data: %w", err)
+		}
+		polaris := util.TraverseJSON(data, "xig_polaris_media")
+		if polaris == nil {
+			continue
+		}
+		polarisBytes, err := sonic.ConfigFastest.Marshal(polaris)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal polaris media: %w", err)
+		}
+		var media PolarisMedia
+		if err := sonic.ConfigFastest.Unmarshal(polarisBytes, &media); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal polaris media: %w", err)
+		}
+		return &media, nil
+	}
+	return nil, fmt.Errorf("xig_polaris_media not found")
+}
+
+func ParseV1Media(ctx *models.ExtractorContext, data *V1Item) (*models.Media, error) {
+	media := ctx.NewMedia()
+	if data.Caption != nil {
+		media.SetCaption(data.Caption.Text)
+	}
+
+	items := data.CarouselMedia
+	if len(items) == 0 {
+		items = []*V1Item{data}
+	}
+	for _, it := range items {
+		var image *Candidates
+		if it.ImageVersions != nil {
+			image = GetBestCandidate(it.ImageVersions.Candidates)
+		}
+		if len(it.VideoVersions) > 0 {
+			video := GetBestVideoVersion(it.VideoVersions)
+			format := &models.MediaFormat{
+				FormatID:   "video",
+				Type:       database.MediaTypeVideo,
+				VideoCodec: database.MediaCodecAvc,
+				AudioCodec: database.MediaCodecAac,
+				URL:        []string{video.URL},
+				Width:      it.OriginalWidth,
+				Height:     it.OriginalHeight,
+			}
+			if image != nil {
+				format.ThumbnailURL = []string{image.URL}
+			}
+			media.NewItem().AddFormats(format)
+			continue
+		}
+		if image == nil {
+			continue
+		}
+		media.NewItem().AddFormats(&models.MediaFormat{
+			FormatID: "image",
+			Type:     database.MediaTypePhoto,
+			URL:      []string{image.URL},
+		})
+	}
+
+	if len(media.Items) == 0 {
+		return nil, fmt.Errorf("no media found")
+	}
+	return media, nil
 }
 
 func IGramBodyFromURL(contentURL string) (io.Reader, error) {

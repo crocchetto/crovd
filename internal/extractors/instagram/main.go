@@ -1,6 +1,7 @@
 package instagram
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"maps"
@@ -40,7 +41,7 @@ var Extractor = &models.Extractor{
 				Media: media,
 			}, nil
 		}
-		// method 3: get media from 3rd party service (unlikely)
+		// method 3: get media from 3rd party service (unlikely) (oh my god)
 		media, err3 := GetIGramPost(ctx)
 		if err3 == nil {
 			return &models.ExtractorResponse{
@@ -60,11 +61,36 @@ var StoriesExtractor = &models.Extractor{
 	Hidden:     true,
 
 	GetFunc: func(ctx *models.ExtractorContext) (*models.ExtractorResponse, error) {
-		media, err := GetIGramStory(ctx)
-		return &models.ExtractorResponse{
-			Media: media,
-		}, err
+		media, err1 := GetStoryEmbedMedia(ctx)
+		if err1 == nil {
+			return &models.ExtractorResponse{
+				Media: media,
+			}, nil
+		}
+		media, err2 := GetIGramStory(ctx)
+		if err2 == nil {
+			return &models.ExtractorResponse{
+				Media: media,
+			}, nil
+		}
+		return nil, fmt.Errorf("all methods failed: %w; %w", err1, err2)
 	},
+}
+
+func GetStoryEmbedMedia(ctx *models.ExtractorContext) (*models.Media, error) {
+	shortcode, err := MediaIDToShortcode(ctx.ContentID)
+	if err != nil {
+		return nil, err
+	}
+	postCtx := *ctx
+	postCtx.ContentID = shortcode
+	media, err := GetEmbedMedia(&postCtx)
+	if err != nil {
+		return nil, err
+	}
+	media.ContentID = ctx.ContentID
+	media.ContentURL = ctx.ContentURL
+	return media, nil
 }
 
 var ShareURLExtractor = &models.Extractor{
@@ -98,6 +124,37 @@ func GetEmbedMedia(ctx *models.ExtractorContext) (*models.Media, error) {
 		"https://www.instagram.com/p/%s/embed/captioned",
 		ctx.ContentID,
 	)
+	var body []byte
+	var err error
+	for attempt := range embedRetries {
+		ctx.Debugf("getting embed page (attempt %d/%d)", attempt+1, embedRetries)
+		body, err = getEmbedPage(ctx, embedURL)
+		if err == nil {
+			break
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	graphData, err := ParseEmbedGQL(body)
+	if err == nil {
+		return ParseGQLMedia(ctx, graphData)
+	}
+	if !errors.Is(err, errEmbedNoContext) {
+		return nil, fmt.Errorf("failed to parse embed page: %w", err)
+	}
+	media, htmlErr := ParseEmbedHTML(ctx, body)
+	if htmlErr == nil {
+		return media, nil
+	}
+	media, err = GetPostPageMedia(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse embed html: %w; %w", htmlErr, err)
+	}
+	return media, nil
+}
+
+func getEmbedPage(ctx *models.ExtractorContext, embedURL string) ([]byte, error) {
 	resp, err := ctx.Fetch(
 		http.MethodGet,
 		embedURL,
@@ -119,11 +176,39 @@ func GetEmbedMedia(ctx *models.ExtractorContext) (*models.Media, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
-	graphData, err := ParseEmbedGQL(body)
+	return body, nil
+}
+
+func GetPostPageMedia(ctx *models.ExtractorContext) (*models.Media, error) {
+	resp, err := ctx.Fetch(
+		http.MethodGet,
+		"https://www.instagram.com/p/"+ctx.ContentID+"/",
+		&networking.RequestParams{
+			Headers: webHeaders,
+		},
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse embed page: %w", err)
+		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
-	return ParseGQLMedia(ctx, graphData)
+	defer resp.Body.Close()
+
+	logger.WriteFile("ig_post_page", resp)
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to get post page: %s", resp.Status)
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+	polaris, err := ParsePostPage(body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse post page: %w", err)
+	}
+	if polaris.IfNotGatedLoggedOut == nil {
+		return nil, fmt.Errorf("media not available in post page (%s)", polaris.Typename)
+	}
+	return ParseV1Media(ctx, polaris.IfNotGatedLoggedOut)
 }
 
 func GetIGramPost(ctx *models.ExtractorContext) (*models.Media, error) {
@@ -230,9 +315,8 @@ func GetPostFromIGram(ctx *models.ExtractorContext) (*IGramResponse, error) {
 	}
 	maps.Copy(headers, igramHeaders)
 
-	resp, err := ctx.Fetch(
-		http.MethodPost,
-		apiURL,
+	resp, err := igramFetch(
+		ctx, apiURL,
 		&networking.RequestParams{
 			Body:    payload,
 			Headers: headers,
@@ -273,9 +357,8 @@ func GetStoryFromIGram(ctx *models.ExtractorContext) (*IGramStoryResponse, error
 	}
 	maps.Copy(headers, igramHeaders)
 
-	resp, err := ctx.Fetch(
-		http.MethodPost,
-		apiURL,
+	resp, err := igramFetch(
+		ctx, apiURL,
 		&networking.RequestParams{
 			Body:    payload,
 			Headers: headers,
@@ -300,4 +383,18 @@ func GetStoryFromIGram(ctx *models.ExtractorContext) (*IGramStoryResponse, error
 	}
 
 	return &story, nil
+}
+
+// no cookies for you (why wasn't this implemented sooner?)
+func igramFetch(
+	ctx *models.ExtractorContext,
+	url string,
+	params *networking.RequestParams,
+) (*http.Response, error) {
+	client := *ctx.HTTPClient
+	client.Cookies = nil
+	return client.FetchWithContext(
+		ctx.Context, http.MethodPost,
+		url, params,
+	)
 }
