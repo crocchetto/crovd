@@ -14,17 +14,25 @@ func (p *M3U8Parser) extractSegments(playlist *m3u8.MediaPlaylist) ([]string, st
 		initSegment = p.resolveURL(playlist.Map.URI)
 	}
 
+	var byteRange bool
 	for _, segment := range playlist.Segments {
 		if segment == nil || segment.URI == "" {
 			continue
 		}
 
+		totalDuration += segment.Duration
+		if byteRange {
+			continue
+		}
+
 		segmentURL := p.resolveURL(segment.URI)
 		segments = append(segments, segmentURL)
-		totalDuration += segment.Duration
 
 		if segment.Limit > 0 {
-			break
+			if initSegment == segmentURL {
+				initSegment = ""
+			}
+			byteRange = true
 		}
 	}
 	return segments, initSegment, totalDuration
