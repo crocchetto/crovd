@@ -28,12 +28,13 @@ var Extractor = &models.Extractor{
 
 	GetFunc: func(ctx *models.ExtractorContext) (*models.ExtractorResponse, error) {
 		// method 1: get media from GQL web API
-		media, err1 := GetGQLMedia(ctx)
-		if err1 == nil {
-			return &models.ExtractorResponse{
-				Media: media,
-			}, nil
-		}
+		// disabled for now since idk how to make it work properly
+		// media, err1 := GetGQLMedia(ctx)
+		// if err1 == nil {
+		// 	return &models.ExtractorResponse{
+		// 		Media: media,
+		// 	}, nil
+		// }
 		// method 2: get media from embed page
 		media, err2 := GetEmbedMedia(ctx)
 		if err2 == nil {
@@ -48,7 +49,7 @@ var Extractor = &models.Extractor{
 				Media: media,
 			}, nil
 		}
-		return nil, fmt.Errorf("all methods failed: %w; %w; %w", err1, err2, err3)
+		return nil, fmt.Errorf("all methods failed: %w; %w", err2, err3)
 	},
 }
 
