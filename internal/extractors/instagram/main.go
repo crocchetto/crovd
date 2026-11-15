@@ -138,7 +138,15 @@ func GetEmbedMedia(ctx *models.ExtractorContext) (*models.Media, error) {
 	}
 	graphData, err := ParseEmbedGQL(body)
 	if err == nil {
-		return ParseGQLMedia(ctx, graphData)
+		media, err := ParseGQLMedia(ctx, graphData)
+		if err == nil {
+			return media, nil
+		}
+		media, postErr := GetPostPageMedia(ctx)
+		if postErr != nil {
+			return nil, fmt.Errorf("%w; %w", err, postErr)
+		}
+		return media, nil
 	}
 	if !errors.Is(err, errEmbedNoContext) {
 		return nil, fmt.Errorf("failed to parse embed page: %w", err)
@@ -184,7 +192,7 @@ func GetPostPageMedia(ctx *models.ExtractorContext) (*models.Media, error) {
 		http.MethodGet,
 		"https://www.instagram.com/p/"+ctx.ContentID+"/",
 		&networking.RequestParams{
-			Headers: webHeaders,
+			Headers: postPageHeaders,
 		},
 	)
 	if err != nil {
