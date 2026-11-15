@@ -19,6 +19,7 @@ var (
 	initialStatePattern = regexp.MustCompile(
 		`window\.__INITIAL_STATE__\s*=\s*({.*?})\s*(?:</script>|;)`,
 	)
+	newSetPattern = regexp.MustCompile(`new Set\((\[[^\]]*\])\)`)
 
 	webHeaders = map[string]string{
 		"User-Agent":      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -69,6 +70,7 @@ func ParseInitialState(body []byte, noteID string) (*NoteDetail, error) {
 	}
 
 	cleaned := strings.ReplaceAll(string(matches[1]), "undefined", "null")
+	cleaned = newSetPattern.ReplaceAllString(cleaned, "$1")
 
 	var state InitialState
 	if err := sonic.ConfigFastest.Unmarshal([]byte(cleaned), &state); err != nil {
