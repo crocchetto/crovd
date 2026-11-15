@@ -2,7 +2,6 @@ package models
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"regexp"
 
@@ -48,34 +47,34 @@ type ExtractorContext struct {
 
 func (e *ExtractorContext) Debugf(format string, args ...interface{}) {
 	if e.Chat != nil {
-		logger.L.Debugf(fmt.Sprintf("[%s] [%d] %s: %s", e.ContentURL, e.Chat.ChatID, e.Extractor.ID, format), args...)
+		logger.L.Debugf("[%s] [%d] %s: "+format, append([]any{e.ContentURL, e.Chat.ChatID, e.Extractor.ID}, args...)...)
 		return
 	}
-	logger.L.Debugf(fmt.Sprintf("[%s] %s: %s", e.ContentURL, e.Extractor.ID, format), args...)
+	logger.L.Debugf("[%s] %s: "+format, append([]any{e.ContentURL, e.Extractor.ID}, args...)...)
 }
 
 func (e *ExtractorContext) Infof(format string, args ...interface{}) {
 	if e.Chat != nil {
-		logger.L.Infof(fmt.Sprintf("[%s] [%d] %s: %s", e.ContentURL, e.Chat.ChatID, e.Extractor.ID, format), args...)
+		logger.L.Infof("[%s] [%d] %s: "+format, append([]any{e.ContentURL, e.Chat.ChatID, e.Extractor.ID}, args...)...)
 		return
 	}
-	logger.L.Infof(fmt.Sprintf("[%s] %s: %s", e.ContentURL, e.Extractor.ID, format), args...)
+	logger.L.Infof("[%s] %s: "+format, append([]any{e.ContentURL, e.Extractor.ID}, args...)...)
 }
 
 func (e *ExtractorContext) Warnf(format string, args ...interface{}) {
 	if e.Chat != nil {
-		logger.L.Warnf(fmt.Sprintf("[%s] [%d] %s: %s", e.ContentURL, e.Chat.ChatID, e.Extractor.ID, format), args...)
+		logger.L.Warnf("[%s] [%d] %s: "+format, append([]any{e.ContentURL, e.Chat.ChatID, e.Extractor.ID}, args...)...)
 		return
 	}
-	logger.L.Warnf(fmt.Sprintf("[%s] %s: %s", e.ContentURL, e.Extractor.ID, format), args...)
+	logger.L.Warnf("[%s] %s: "+format, append([]any{e.ContentURL, e.Extractor.ID}, args...)...)
 }
 
 func (e *ExtractorContext) Errorf(format string, args ...interface{}) {
 	if e.Chat != nil {
-		logger.L.Errorf(fmt.Sprintf("[%s] [%d] %s: %s", e.ContentURL, e.Chat.ChatID, e.Extractor.ID, format), args...)
+		logger.L.Errorf("[%s] [%d] %s: "+format, append([]any{e.ContentURL, e.Chat.ChatID, e.Extractor.ID}, args...)...)
 		return
 	}
-	logger.L.Errorf(fmt.Sprintf("[%s] %s: %s", e.ContentURL, e.Extractor.ID, format), args...)
+	logger.L.Errorf("[%s] %s: "+format, append([]any{e.ContentURL, e.Extractor.ID}, args...)...)
 }
 
 func (e *ExtractorContext) Key() string {
