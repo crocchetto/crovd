@@ -39,6 +39,7 @@ var Extractors = []*models.Extractor{
 	reddit.Extractor,
 	reddit.ShortExtractor,
 	reddit.ShortIDExtractor,
+	threads.ShareExtractor,
 	threads.Extractor,
 	xiaohongshu.Extractor,
 	xiaohongshu.ShortExtractor,

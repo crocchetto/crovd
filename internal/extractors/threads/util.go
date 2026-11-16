@@ -11,6 +11,10 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+var shareHeaders = map[string]string{
+	"User-Agent": "Mozilla/5.0",
+}
+
 var headers = map[string]string{
 	"Accept":                    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
 	"Accept-Language":           "en-GB,en;q=0.9",

@@ -11,6 +11,27 @@ import (
 	"github.com/govdbot/govd/internal/networking"
 )
 
+var ShareExtractor = &models.Extractor{
+	ID:          "threads",
+	DisplayName: "Threads (Share)",
+
+	URLPattern: regexp.MustCompile(`https:\/\/(www\.)?threads\.[^\/]+\/share\/(?P<id>[a-zA-Z0-9_-]+)`),
+	Host:       []string{"threads"},
+
+	Redirect: true,
+
+	GetFunc: func(ctx *models.ExtractorContext) (*models.ExtractorResponse, error) {
+		finalURL, err := ctx.FetchLocation(
+			ctx.ContentURL,
+			&networking.RequestParams{Headers: shareHeaders},
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to follow share redirect: %w", err)
+		}
+		return &models.ExtractorResponse{URL: finalURL}, nil
+	},
+}
+
 var Extractor = &models.Extractor{
 	ID:          "threads",
 	DisplayName: "Threads",
