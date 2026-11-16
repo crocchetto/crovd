@@ -12,6 +12,7 @@ import (
 	"github.com/govdbot/govd/internal/models"
 	"github.com/govdbot/govd/internal/plugins"
 	"github.com/govdbot/govd/internal/util"
+	"github.com/govdbot/govd/internal/util/parser/m3u8"
 
 	"github.com/bytedance/sonic"
 	"go.uber.org/zap"
@@ -114,6 +115,18 @@ func GetTrackMedia(ctx *models.ExtractorContext) (*models.Media, error) {
 	}
 
 	if formatObj == nil {
+		// some tracks don't have mp3 anymore
+		for _, t := range manifest.Media.Transcodings {
+			if !strings.HasPrefix(t.Preset, "aac_") || t.Format.Protocol != "hls" {
+				continue
+			}
+			if formatObj == nil || t.Preset == "aac_160k" {
+				formatObj = t
+			}
+		}
+	}
+
+	if formatObj == nil {
 		return nil, fmt.Errorf("no suitable format found")
 	}
 
@@ -124,6 +137,28 @@ func GetTrackMedia(ctx *models.ExtractorContext) (*models.Media, error) {
 
 	media := ctx.NewMedia()
 	item := media.NewItem()
+
+	if formatObj.Format.Protocol == "hls" {
+		formats, err := m3u8.ParseM3U8FromURL(ctx, trackManifest.URL, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse m3u8: %w", err)
+		}
+		if len(formats) == 0 {
+			return nil, util.ErrUnavailable
+		}
+		for _, format := range formats {
+			format.FormatID = "aac"
+			format.Type = database.MediaTypeAudio
+			format.AudioCodec = database.MediaCodecAac
+			format.ThumbnailURL = []string{thumbnail}
+			format.Duration = duration
+			format.Title = title
+			format.Artist = artist
+		}
+		item.AddFormats(formats...)
+		return media, nil
+	}
+
 	item.AddFormats(&models.MediaFormat{
 		FormatID:     "mp3",
 		Type:         database.MediaTypeAudio,
