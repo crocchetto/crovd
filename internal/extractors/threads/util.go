@@ -50,22 +50,22 @@ func ParseEmbedMedia(ctx *models.ExtractorContext, body []byte) (*models.Media, 
 	media.SetCaption(caption)
 
 	doc.Find(".MediaContainer, .SoloMediaContainer").Each(func(i int, container *goquery.Selection) {
-		container.Find("video").Each(func(j int, vid *goquery.Selection) {
-			sourceEl := vid.Find("source")
-			src, exists := sourceEl.Attr("src")
-			if exists {
-				item := media.NewItem()
-				item.AddFormats(&models.MediaFormat{
-					Type:       database.MediaTypeVideo,
-					FormatID:   "video",
-					URL:        []string{src},
-					VideoCodec: database.MediaCodecAvc,
-					AudioCodec: database.MediaCodecAac,
-				})
+		container.Find("video, img").Each(func(j int, el *goquery.Selection) {
+			if goquery.NodeName(el) == "video" {
+				src, exists := el.Find("source").Attr("src")
+				if exists {
+					item := media.NewItem()
+					item.AddFormats(&models.MediaFormat{
+						Type:       database.MediaTypeVideo,
+						FormatID:   "video",
+						URL:        []string{src},
+						VideoCodec: database.MediaCodecAvc,
+						AudioCodec: database.MediaCodecAac,
+					})
+				}
+				return
 			}
-		})
-		container.Find("img").Each(func(j int, img *goquery.Selection) {
-			src, exists := img.Attr("src")
+			src, exists := el.Attr("src")
 			if exists {
 				item := media.NewItem()
 				item.AddFormats(&models.MediaFormat{
