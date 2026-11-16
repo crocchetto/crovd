@@ -54,7 +54,7 @@ func ImgToJPEG(
 		H: int32(img.Bounds().Dy()),
 	}
 	logger.L.Debugf("image dimensions: %dx%d", bounds.W, bounds.H)
-	if isJPEG {
+	if isJPEG && resize <= 0 {
 		if _, err = io.Copy(outputFile, file); err != nil {
 			os.Remove(outputPath)
 			return nil, fmt.Errorf("failed to copy image: %w", err)
