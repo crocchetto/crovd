@@ -22,7 +22,12 @@ type NoteDetail struct {
 }
 
 type VideoInfo struct {
-	Media *VideoMedia `json:"media"`
+	Media    *VideoMedia    `json:"media"`
+	Consumer *VideoConsumer `json:"consumer"`
+}
+
+type VideoConsumer struct {
+	OriginVideoKey string `json:"originVideoKey"`
 }
 
 type VideoMedia struct {
@@ -45,6 +50,7 @@ type StreamEntry struct {
 	Height     int32    `json:"height"`
 	Bitrate    int64    `json:"videoBitrate"`
 	Size       int64    `json:"size"`
+	Duration   int64    `json:"duration"`
 	Quality    string   `json:"qualityType"`
 	Format     string   `json:"format"`
 }

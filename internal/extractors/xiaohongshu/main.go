@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/govdbot/govd/internal/database"
@@ -84,8 +85,8 @@ func GetMedia(ctx *models.ExtractorContext) (*models.Media, error) {
 	}
 	media.SetCaption(caption)
 
-	switch note.Type {
-	case "video":
+	switch {
+	case note.Type == "video" && !isSlideshow(note):
 		if err := extractVideo(ctx, media, note); err != nil {
 			return nil, err
 		}
@@ -98,6 +99,13 @@ func GetMedia(ctx *models.ExtractorContext) (*models.Media, error) {
 	return media, nil
 }
 
+func isSlideshow(note *NoteDetail) bool {
+	if len(note.ImageList) == 0 || note.Video == nil || note.Video.Consumer == nil {
+		return false
+	}
+	return strings.HasPrefix(note.Video.Consumer.OriginVideoKey, "slides_simulate_post/")
+}
+
 func extractVideo(ctx *models.ExtractorContext, media *models.Media, note *NoteDetail) error {
 	if note.Video == nil || note.Video.Media == nil || note.Video.Media.Stream == nil {
 		return util.ErrUnavailable
@@ -107,15 +115,8 @@ func extractVideo(ctx *models.ExtractorContext, media *models.Media, note *NoteD
 	duration := note.Video.Media.Duration / 1000
 
 	if duration == 0 {
-		var bestSize, bestBitrate int64
-		for _, e := range append(stream.H265, stream.H264...) {
-			if e.Size > bestSize {
-				bestSize = e.Size
-				bestBitrate = e.Bitrate
-			}
-		}
-		if bestBitrate > 0 {
-			duration = bestSize * 8 / bestBitrate
+		for _, e := range slices.Concat(stream.H265, stream.H264, stream.Av1) {
+			duration = max(duration, e.Duration/1000)
 		}
 	}
 
