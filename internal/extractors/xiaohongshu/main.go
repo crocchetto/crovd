@@ -188,7 +188,33 @@ func extractImages(media *models.Media, note *NoteDetail) error {
 			FormatID: "image",
 			URL:      []string{imgURL},
 		})
+		// img + clip should be better
+		if img.LivePhoto && img.Stream != nil {
+			addLiveVideo(media, img.Stream)
+		}
 	}
 
 	return nil
+}
+
+func addLiveVideo(media *models.Media, stream *StreamInfo) {
+	var item *models.MediaItem
+	for _, entry := range stream.H264 {
+		urls := streamURLs(entry)
+		if len(urls) == 0 {
+			continue
+		}
+		if item == nil {
+			item = media.NewItem()
+		}
+		item.AddFormats(&models.MediaFormat{
+			Type:       database.MediaTypeVideo,
+			FormatID:   "live-h264-" + entry.Quality,
+			URL:        urls,
+			VideoCodec: database.MediaCodecAvc,
+			AudioCodec: database.MediaCodecAac,
+			Width:      entry.Width,
+			Height:     entry.Height,
+		})
+	}
 }

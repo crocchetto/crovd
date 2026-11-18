@@ -50,7 +50,9 @@ type StreamEntry struct {
 }
 
 type ImageItem struct {
-	InfoList []*ImageInfo `json:"infoList"`
+	InfoList  []*ImageInfo `json:"infoList"`
+	LivePhoto bool         `json:"livePhoto"`
+	Stream    *StreamInfo  `json:"stream"`
 }
 
 type ImageInfo struct {
