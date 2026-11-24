@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/bytedance/sonic"
+	"github.com/google/uuid"
 	"github.com/govdbot/govd/internal/models"
 	"github.com/govdbot/govd/internal/networking"
 	"github.com/govdbot/govd/internal/util"
@@ -27,9 +28,17 @@ var webHeaders = map[string]string{
 	"Origin":          "https://www.bilibili.com",
 }
 
-func GetVideoInfo(ctx *models.ExtractorContext, bvid string) (*VideoInfo, error) {
+func visitorCookies(ctx *models.ExtractorContext) []*http.Cookie {
+	for _, cookie := range ctx.HTTPClient.Cookies {
+		if cookie.Name == "buvid3" {
+			return nil
+		}
+	}
+	return []*http.Cookie{{Name: "buvid3", Value: uuid.NewString() + "infoc"}}
+}
+
+func GetVideoInfo(ctx *models.ExtractorContext, bvid string, cookies []*http.Cookie) (*VideoInfo, error) {
 	reqURL := fmt.Sprintf("%s?bvid=%s", viewAPIBase, bvid)
-	cookies := util.GetExtractorCookies("bilibili")
 
 	resp, err := ctx.Fetch(
 		http.MethodGet,
@@ -56,10 +65,9 @@ func GetVideoInfo(ctx *models.ExtractorContext, bvid string) (*VideoInfo, error)
 	return &infoResp.Data, nil
 }
 
-func GetPlayURL(ctx *models.ExtractorContext, bvid string, cid int64) (*PlayURLData, error) {
+func GetPlayURL(ctx *models.ExtractorContext, bvid string, cid int64, cookies []*http.Cookie) (*PlayURLData, error) {
 	quality := qualityHD
-	cookies := util.GetExtractorCookies("bilibili")
-	if len(cookies) > 0 {
+	if len(ctx.HTTPClient.Cookies) > 0 {
 		quality = 116
 	}
 
@@ -97,7 +105,7 @@ func GetBangumiInfo(ctx *models.ExtractorContext, epID string) (*BangumiEpisode,
 	apiURL := "https://api.bilibili.com/pgc/view/web/season?ep_id=" + epID
 	resp, err := ctx.Fetch(http.MethodGet, apiURL, &networking.RequestParams{
 		Headers: webHeaders,
-		Cookies: util.GetExtractorCookies("bilibili"),
+		Cookies: visitorCookies(ctx),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch bangumi info: %w", err)
@@ -120,9 +128,8 @@ func GetBangumiInfo(ctx *models.ExtractorContext, epID string) (*BangumiEpisode,
 }
 
 func GetBangumiPlayURL(ctx *models.ExtractorContext, epID string) (*PlayURLData, error) {
-	cookies := util.GetExtractorCookies("bilibili")
 	quality := qualityHD
-	if len(cookies) > 0 {
+	if len(ctx.HTTPClient.Cookies) > 0 {
 		quality = 116
 	}
 	apiURL := fmt.Sprintf(
@@ -131,7 +138,7 @@ func GetBangumiPlayURL(ctx *models.ExtractorContext, epID string) (*PlayURLData,
 	)
 	resp, err := ctx.Fetch(http.MethodGet, apiURL, &networking.RequestParams{
 		Headers: webHeaders,
-		Cookies: cookies,
+		Cookies: visitorCookies(ctx),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch bangumi playurl: %w", err)

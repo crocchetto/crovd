@@ -75,12 +75,13 @@ var BangumiExtractor = &models.Extractor{
 func GetMedia(ctx *models.ExtractorContext) (*models.Media, error) {
 	bvid := ctx.ContentID
 
-	info, err := GetVideoInfo(ctx, bvid)
+	cookies := visitorCookies(ctx)
+	info, err := GetVideoInfo(ctx, bvid, cookies)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get video info: %w", err)
 	}
 
-	playData, err := GetPlayURL(ctx, bvid, info.CID)
+	playData, err := GetPlayURL(ctx, bvid, info.CID, cookies)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get play url: %w", err)
 	}
