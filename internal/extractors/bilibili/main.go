@@ -1,6 +1,7 @@
 package bilibili
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -75,15 +76,18 @@ var BangumiExtractor = &models.Extractor{
 func GetMedia(ctx *models.ExtractorContext) (*models.Media, error) {
 	bvid := ctx.ContentID
 
-	cookies := visitorCookies(ctx)
-	info, err := GetVideoInfo(ctx, bvid, cookies)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get video info: %w", err)
-	}
-
-	playData, err := GetPlayURL(ctx, bvid, info.CID, cookies)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get play url: %w", err)
+	// method 1: api with a random visitor cookie
+	info, playData, err1 := getFromAPI(ctx, bvid)
+	if err1 != nil {
+		if !errors.Is(err1, errRequestBanned) {
+			return nil, err1
+		}
+		// method 2: video page which gives real visitor cookies
+		var err2 error
+		info, playData, err2 = getFromPage(ctx, bvid)
+		if err2 != nil {
+			return nil, fmt.Errorf("all methods failed: %w; %w", err1, err2)
+		}
 	}
 
 	if len(playData.DURL) == 0 {
@@ -94,6 +98,31 @@ func GetMedia(ctx *models.ExtractorContext) (*models.Media, error) {
 	media.SetCaption(info.Title)
 
 	return buildMedia(media, playData, []string{info.Pic})
+}
+
+func getFromAPI(ctx *models.ExtractorContext, bvid string) (*VideoInfo, *PlayURLData, error) {
+	cookies := visitorCookies(ctx)
+	info, err := GetVideoInfo(ctx, bvid, cookies)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get video info: %w", err)
+	}
+	playData, err := GetPlayURL(ctx, bvid, info.CID, cookies)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get play url: %w", err)
+	}
+	return info, playData, nil
+}
+
+func getFromPage(ctx *models.ExtractorContext, bvid string) (*VideoInfo, *PlayURLData, error) {
+	info, cookies, err := GetVideoPage(ctx, bvid)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get video page: %w", err)
+	}
+	playData, err := GetPlayURL(ctx, bvid, info.CID, cookies)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get play url: %w", err)
+	}
+	return info, playData, nil
 }
 
 func GetBangumiMedia(ctx *models.ExtractorContext) (*models.Media, error) {

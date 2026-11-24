@@ -1,7 +1,9 @@
 package bilibili
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -18,7 +20,12 @@ const (
 	playURLAPIBase = "https://api.bilibili.com/x/player/playurl"
 
 	qualityHD = 80
+
+	// risk control
+	codeRequestBanned = -412
 )
+
+var errRequestBanned = errors.New("request was banned")
 
 var webHeaders = map[string]string{
 	"User-Agent":      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -28,6 +35,17 @@ var webHeaders = map[string]string{
 	"Origin":          "https://www.bilibili.com",
 }
 
+var pageHeaders = map[string]string{
+	"User-Agent":      webHeaders["User-Agent"],
+	"Accept":          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+	"Accept-Language": webHeaders["Accept-Language"],
+	"Sec-Fetch-Dest":  "document",
+	"Sec-Fetch-Mode":  "navigate",
+	"Sec-Fetch-Site":  "none",
+}
+
+const initialStateMarker = "window.__INITIAL_STATE__="
+
 func visitorCookies(ctx *models.ExtractorContext) []*http.Cookie {
 	for _, cookie := range ctx.HTTPClient.Cookies {
 		if cookie.Name == "buvid3" {
@@ -35,6 +53,60 @@ func visitorCookies(ctx *models.ExtractorContext) []*http.Cookie {
 		}
 	}
 	return []*http.Cookie{{Name: "buvid3", Value: uuid.NewString() + "infoc"}}
+}
+
+func apiError(code int, message string) error {
+	if code == codeRequestBanned {
+		return fmt.Errorf("API error %d: %w", code, errRequestBanned)
+	}
+	return fmt.Errorf("API error %d: %s", code, message)
+}
+
+func GetVideoPage(ctx *models.ExtractorContext, bvid string) (*VideoInfo, []*http.Cookie, error) {
+	resp, err := ctx.Fetch(
+		http.MethodGet,
+		"https://www.bilibili.com/video/"+bvid+"/",
+		&networking.RequestParams{
+			Headers: pageHeaders,
+		},
+	)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to fetch video page: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, nil, fmt.Errorf("failed to get video page: %s", resp.Status)
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to read video page: %w", err)
+	}
+	info, err := ParseVideoPage(body)
+	if err != nil {
+		return nil, nil, err
+	}
+	return info, resp.Cookies(), nil
+}
+
+func ParseVideoPage(body []byte) (*VideoInfo, error) {
+	page := string(body)
+	if strings.Contains(page, "v_voucher") {
+		return nil, fmt.Errorf("rate limited by bilibili, try again later")
+	}
+	i := strings.Index(page, initialStateMarker)
+	if i < 0 {
+		return nil, fmt.Errorf("initial state not found")
+	}
+	var state InitialState
+	decoder := sonic.ConfigFastest.NewDecoder(strings.NewReader(page[i+len(initialStateMarker):]))
+	if err := decoder.Decode(&state); err != nil {
+		return nil, fmt.Errorf("failed to parse initial state: %w", err)
+	}
+	if state.VideoData == nil || state.VideoData.CID == 0 {
+		return nil, fmt.Errorf("video data not found in initial state")
+	}
+	return state.VideoData, nil
 }
 
 func GetVideoInfo(ctx *models.ExtractorContext, bvid string, cookies []*http.Cookie) (*VideoInfo, error) {
@@ -59,7 +131,7 @@ func GetVideoInfo(ctx *models.ExtractorContext, bvid string, cookies []*http.Coo
 	}
 
 	if infoResp.Code != 0 {
-		return nil, fmt.Errorf("API error %d: %s", infoResp.Code, infoResp.Message)
+		return nil, apiError(infoResp.Code, infoResp.Message)
 	}
 
 	return &infoResp.Data, nil
@@ -95,7 +167,7 @@ func GetPlayURL(ctx *models.ExtractorContext, bvid string, cid int64, cookies []
 	}
 
 	if playResp.Code != 0 {
-		return nil, fmt.Errorf("API error %d: %s", playResp.Code, playResp.Message)
+		return nil, apiError(playResp.Code, playResp.Message)
 	}
 
 	return &playResp.Data, nil

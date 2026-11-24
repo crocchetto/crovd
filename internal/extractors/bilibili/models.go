@@ -15,6 +15,10 @@ type VideoInfo struct {
 	Pic   string `json:"pic"`
 }
 
+type InitialState struct {
+	VideoData *VideoInfo `json:"videoData"`
+}
+
 type PlayURLResponse struct {
 	Code    int         `json:"code"`
 	Message string      `json:"message"`
